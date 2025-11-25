@@ -1,0 +1,3 @@
+"""
+SpatialDise package root.
+"""

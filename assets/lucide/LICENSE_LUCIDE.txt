@@ -1,0 +1,4 @@
+Lucide Icons
+Source: https://lucide.dev
+License: ISC
+Copyright (c) Lucide Contributors

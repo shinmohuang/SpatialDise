@@ -1,0 +1,29 @@
+defaults:
+  image_resolution: [640, 480]
+  num_questions: 50
+  num_distractors: 3
+  rectangular_prism_prob: 0.3
+  use_gpu: true
+
+
+tasks:
+  - task: 3d_folding
+    output_dir: blender_dataset/box_folding
+    difficulty: medium
+
+  - task: 3d_shape_finding
+    output_dir: blender_dataset/shape_finding
+    difficulty: medium
+
+  - task: 3d_rotation
+    output_dir: blender_dataset/3d_rotation
+    difficulty: hard
+
+  - task: 3d_combination
+    output_dir: blender_dataset/combination
+    difficulty: hard
+
+  - task: 3d_projection
+    output_dir: blender_dataset/view_matching
+    difficulty: medium
+

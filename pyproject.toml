@@ -1,0 +1,13 @@
+[project]
+name = "spatialdise"
+version = "0.1.0"
+description = "SpatialDise spatial reasoning generators and tools"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "pyyaml>=6.0",
+  "cairosvg>=2.7.0",
+]
+
+[tool.uv]
+

@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 # AGENTS.md
 # openspec/
+.vscode/
 
 # C extensions
 *.so

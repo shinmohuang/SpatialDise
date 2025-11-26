@@ -7,8 +7,8 @@ import mathutils
 import bmesh
 import glob
 
-from SpatialDise.generator.core.base_generator import SpatialReasoningGeneratorBase
-from SpatialDise.generator.core import icons as icon_utils
+from generator.core.base_generator import SpatialReasoningGeneratorBase
+from generator.core import icons as icon_utils
 
 
 class BoxFoldingGenerator(SpatialReasoningGeneratorBase):
@@ -129,36 +129,30 @@ class BoxFoldingGenerator(SpatialReasoningGeneratorBase):
         ]
 
         # 获取图标文件路径列表
+        from generator.core import logging as log
         try:
-            icons_path = "SpatialDise/assets/lucide"
-            if os.path.exists(icons_path):
-                self.icon_files = [os.path.join(icons_path, f) for f in os.listdir(icons_path)
-                                   if f.lower().endswith('.png')]
-                print(f"找到 {len(self.icon_files)} 个图标文件")
-
-                # 测试加载前5个图像，验证它们是否可用
-                test_icons = self.icon_files[:5] if len(
-                    self.icon_files) > 5 else self.icon_files
+            self.icon_files = icon_utils.ensure_lucide_icons(
+                self.config.get("lucide_icons", icon_utils.DEFAULT_LUCIDE_ICONS),
+                download=self.config.get("lucide_download", False),
+                allow_svg_fallback=True,
+            )
+            if self.icon_files:
+                log.info(f"找到 {len(self.icon_files)} 个图标文件")
+                test_icons = self.icon_files[:5]
                 for icon in test_icons:
                     try:
-                        if not os.path.exists(icon):
-                            print(f"图标文件不存在: {icon}")
-                            continue
-
-                        # 尝试加载图像
                         bpy.data.images.load(icon, check_existing=True)
-                        print(f"成功加载图像: {os.path.basename(icon)}")
+                        log.info(f"成功加载图像: {os.path.basename(icon)}")
                     except Exception as e:
-                        print(f"无法加载图像 {os.path.basename(icon)}: {e}")
+                        log.warn(f"无法加载图像 {os.path.basename(icon)}: {e}")
             else:
-                print(f"图标目录不存在: {icons_path}")
-                self.icon_files = []
+                log.warn(f"未找到可用的图标文件，图标目录: {icon_utils.ASSETS_ROOT}")
         except Exception as e:
-            print(f"加载图标时出错: {e}")
+            log.warn(f"加载图标时出错: {e}")
             self.icon_files = []
 
         if not self.icon_files:
-            print("未找到可用的图标文件，将使用几何图案作为备用")
+            log.info("未找到可用的图标文件，将使用几何图案作为备用")
 
     def create_cube_with_textures(self, cube_size=2.0, seed=None, texture_scale=None):
         """

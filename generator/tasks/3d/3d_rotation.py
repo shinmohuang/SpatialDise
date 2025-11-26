@@ -10,7 +10,7 @@ from datetime import datetime
 import bpy
 import mathutils
 
-from SpatialDise.generator.core.base_generator import BaseGenerator
+from generator.core.base_generator import BaseGenerator
 
 
 class RotationMatchingGenerator(BaseGenerator):

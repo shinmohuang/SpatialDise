@@ -32,7 +32,7 @@ for path in (GENERATOR_ROOT, PACKAGE_ROOT, TOP_ROOT):
     if path not in sys.path:
         sys.path.append(path)
 
-from SpatialDise.generator.tasks import get_generator_class, normalize_task_name  # noqa: E402
+from generator.tasks import get_generator_class, normalize_task_name  # noqa: E402
 
 
 TASKS = ["3d_rotation", "3d_folding", "3d_combination",

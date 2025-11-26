@@ -11,8 +11,8 @@ from datetime import datetime
 import bpy
 import mathutils
 
-from SpatialDise.generator.core.base_generator import BaseGenerator
-from SpatialDise.generator.core import projection as projection_utils
+from generator.core.base_generator import BaseGenerator
+from generator.core import projection as projection_utils
 
 
 class ViewMatchingGenerator(BaseGenerator):
@@ -110,7 +110,8 @@ class ViewMatchingGenerator(BaseGenerator):
             return False  # 避免除以零
 
         difference_ratio = len(diff_coords) / len(total_coords)
-        print(f"视图 {view_name} 的投影差异率: {difference_ratio:.2f}")
+        from generator.core import logging as log
+        log.info(f"视图 {view_name} 的投影差异率: {difference_ratio:.2f}")
         return difference_ratio >= min_difference
 
     def create_view_indicator(
@@ -168,12 +169,28 @@ class ViewMatchingGenerator(BaseGenerator):
         nodes = arrow_mat.node_tree.nodes
         principled = nodes.get("Principled BSDF")
         if principled:
-            principled.inputs["Base Color"].default_value = color
-            principled.inputs["Specular"].default_value = 0.2
-            principled.inputs["Metallic"].default_value = 0.8
-            principled.inputs["Emission"].default_value = (
-                color[0], color[1], color[2], 1.0)
-            principled.inputs["Emission Strength"].default_value = 1.0
+            base_color = principled.inputs.get("Base Color")
+            if base_color:
+                base_color.default_value = color
+
+            specular = (
+                principled.inputs.get("Specular")
+                or principled.inputs.get("Specular IOR Level")
+            )
+            if specular:
+                specular.default_value = 0.2
+
+            metallic = principled.inputs.get("Metallic")
+            if metallic:
+                metallic.default_value = 0.8
+
+            emission = principled.inputs.get("Emission")
+            if emission:
+                emission.default_value = (color[0], color[1], color[2], 1.0)
+
+            emission_strength = principled.inputs.get("Emission Strength")
+            if emission_strength:
+                emission_strength.default_value = 1.0
 
         cone.data.materials.append(arrow_mat)
 
@@ -200,7 +217,8 @@ class ViewMatchingGenerator(BaseGenerator):
 
     def generate_question(self, q_id):
         """Generate a single 3D view matching question"""
-        print(f"Generating question {q_id}...")
+        from generator.core import logging as log
+        log.info(f"Generating question {q_id}...")
 
         # Clear any existing objects
         self.clear_question_objects()
@@ -230,7 +248,7 @@ class ViewMatchingGenerator(BaseGenerator):
         # Get all children (cubes) in the shape
         cubes = [obj for obj in original_obj.children]
         if not cubes:
-            print("警告: 没有生成任何方块!")
+            log.warn("警告: 没有生成任何方块!")
             return None
 
         # 预先计算每个正交视图下的投影，用于选择具有唯一截面的正确答案视图

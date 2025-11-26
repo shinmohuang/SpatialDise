@@ -8,9 +8,9 @@ import argparse
 import sys
 from typing import Tuple
 
-from SpatialDise.generator.core import logging as log
-from SpatialDise.generator.core.paths import default_output_dir, ensure_dir
-from SpatialDise.generator.tasks import get_generator_class, normalize_task_name
+from generator.core import logging as log
+from generator.core.paths import default_output_dir, ensure_dir
+from generator.tasks import get_generator_class, normalize_task_name
 
 
 def parse_arguments():
@@ -190,8 +190,9 @@ if __name__ == "__main__":
     try:
         import bpy  # noqa: F401
     except ImportError:
-        print("Error: This script must be run from within Blender.")
-        print("Usage: blender --background --python SpatialDise/generator/cli/generate.py -- [arguments]")
+        from generator.core import logging as log
+        log.warn("This script must be run from within Blender (bpy not found).")
+        log.info("Usage: blender --background --python SpatialDise/generator/cli/generate.py -- [arguments]")
         sys.exit(1)
 
     main()

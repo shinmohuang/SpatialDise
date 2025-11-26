@@ -7,7 +7,7 @@ import math
 import bpy
 import mathutils
 
-from SpatialDise.generator.core import render as render_utils
+from generator.core import render as render_utils
 
 
 def clear_scene():

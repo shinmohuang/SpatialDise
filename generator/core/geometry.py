@@ -319,9 +319,10 @@ def create_combination_shape(ctx, use_rectangular=None, rect_prob=None, seed=Non
         obj.location = (pos[0] + offset_x, pos[1] +
                         offset_y, pos[2] + offset_z)
         bpy.context.view_layer.update()
+        from generator.core import logging as log
         for existing_obj in created_objects:
             if ctx.check_collision(obj, existing_obj):
-                print(f"警告: 检测到在位置 {pos} 的方块与现有方块碰撞")
+                log.warn(f"警告: 检测到在位置 {pos} 的方块与现有方块碰撞")
                 break
         created_objects.append(obj)
         obj.display_type = 'WIRE'

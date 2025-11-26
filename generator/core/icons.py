@@ -10,8 +10,8 @@ from typing import Iterable, List, Sequence
 import json
 import math
 
-from SpatialDise.generator.core.paths import ensure_dir
-from SpatialDise.generator.core import logging as log
+from generator.core.paths import ensure_dir
+from generator.core import logging as log
 
 try:
     import bpy  # type: ignore

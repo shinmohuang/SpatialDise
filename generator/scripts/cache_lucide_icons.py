@@ -19,8 +19,8 @@ from pathlib import Path
 script_dir = Path(__file__).resolve().parent
 sys.path.insert(0, str(script_dir.parent.parent.parent))
 
-from SpatialDise.generator.core import icons as icon_utils
-from SpatialDise.generator.core.logging import info, warn
+from generator.core import icons as icon_utils
+from generator.core.logging import info, warn
 
 
 def parse_args():

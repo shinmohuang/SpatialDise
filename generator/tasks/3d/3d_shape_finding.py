@@ -13,14 +13,14 @@ from pathlib import Path
 import bpy
 import mathutils
 
-from SpatialDise.generator.core import icons as icon_utils
+from generator.core import icons as icon_utils
 
 
 def _load_folding_base():
     """Load Folding3DGenerator from sibling 3d_folding.py without importing via invalid module name."""
     module_path = Path(__file__).with_name("3d_folding.py")
     spec = importlib.util.spec_from_file_location(
-        "SpatialDise.generator.tasks.dynamic_3d_folding_base",
+        "generator.tasks.dynamic_3d_folding_base",
         module_path,
     )
     if spec is None or spec.loader is None:

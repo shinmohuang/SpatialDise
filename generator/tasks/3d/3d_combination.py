@@ -13,7 +13,7 @@ import bpy
 import bmesh
 import mathutils
 
-from SpatialDise.generator.core.base_generator import BaseGenerator
+from generator.core.base_generator import BaseGenerator
 
 
 class CombinationGenerator(BaseGenerator):

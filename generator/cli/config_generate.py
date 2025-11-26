@@ -4,7 +4,7 @@
 
 Usage (inside Blender):
 
-  blender --background --python SpatialDise/generator/cli/config_generate.py -- \\
+  blender --background --python generator/cli/config_generate.py -- \\
     --config path/to/config.yaml
 
 Config format (YAML example, single difficulty field):
@@ -32,9 +32,30 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, Iterable, List
 
-from SpatialDise.generator.core import logging as log
-from SpatialDise.generator.core.paths import default_output_dir, ensure_dir
-from SpatialDise.generator.tasks import get_generator_class, normalize_task_name
+# Ensure repo root is importable when running directly via Blender
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.append(str(REPO_ROOT))
+
+def _maybe_add_local_venv() -> None:
+    """Try to reuse the project's .venv site-packages when Blender ships its own Python."""
+    venv_dir = REPO_ROOT / ".venv"
+    if not venv_dir.exists():
+        return
+
+    py_ver = f"python{sys.version_info.major}.{sys.version_info.minor}"
+    for base in ("lib", "lib64"):
+        site_dir = venv_dir / base / py_ver / "site-packages"
+        if site_dir.exists():
+            site_dir_str = str(site_dir)
+            if site_dir_str not in sys.path:
+                sys.path.insert(0, site_dir_str)
+
+_maybe_add_local_venv()
+
+from generator.core import logging as log
+from generator.core.paths import default_output_dir, ensure_dir
+from generator.tasks import get_generator_class, normalize_task_name
 
 
 def _parse_argv() -> argparse.Namespace:
@@ -197,8 +218,16 @@ def main() -> None:
             log.info(f"[config] Skipping task={task_name} (filtered by --task)")
             continue
 
-        output_dir = job.get("output_dir") or default_output_dir(task_name)
-        output_dir = ensure_dir(output_dir)
+        output_dir = job.get("output_dir")
+        if not output_dir:
+            output_root = job.get("output_root")
+            base_dir = default_output_dir(task_name, root=output_root) if output_root else default_output_dir(task_name)
+            difficulty = job.get("difficulty") or job.get("difficulty_level")
+            if isinstance(difficulty, str) and difficulty.strip():
+                output_dir = Path(base_dir) / difficulty.strip()
+            else:
+                output_dir = base_dir
+        output_dir = ensure_dir(str(output_dir))
 
         gen_cfg = _prepare_generator_config(job, task_name)
 
@@ -223,8 +252,9 @@ if __name__ == "__main__":
     try:
         import bpy  # type: ignore  # noqa: F401
     except ImportError:
-        print("Error: This script must be run from within Blender (bpy not found).")
-        print("Usage: blender --background --python SpatialDise/generator/cli/config_generate.py -- --config path/to/config.yaml")
+        from generator.core import logging as log
+        log.warn("This script must be run from within Blender (bpy not found).")
+        log.info("Usage: blender --background --python SpatialDise/generator/cli/config_generate.py -- --config path/to/config.yaml")
         sys.exit(1)
 
     main()

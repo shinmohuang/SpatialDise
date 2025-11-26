@@ -18,12 +18,12 @@ except ImportError:
     import sys
     sys.exit(1)
 
-from SpatialDise.generator.core import camera as camera_utils
-from SpatialDise.generator.core import geometry
-from SpatialDise.generator.core import render as render_utils
-from SpatialDise.generator.core import scene as scene_utils
-from SpatialDise.generator.core.logging import info
-from SpatialDise.generator.core.paths import default_output_dir, ensure_dir
+from generator.core import camera as camera_utils
+from generator.core import geometry
+from generator.core import render as render_utils
+from generator.core import scene as scene_utils
+from generator.core.logging import info
+from generator.core.paths import default_output_dir, ensure_dir
 
 
 class BaseGenerator:

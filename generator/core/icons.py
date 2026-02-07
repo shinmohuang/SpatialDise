@@ -43,9 +43,13 @@ DEFAULT_LUCIDE_ICONS: Sequence[str] = (
     "arrow-left",
 )
 
-# Cache dir: SpatialDise/assets/lucide/
+# Icon cache dirs:
+# - Lucide cache: SpatialDise/assets/lucide/
+# - Custom override: SpatialDise/assets/customize/
 ASSETS_ROOT = Path(__file__).resolve().parents[2] / "assets" / "lucide"
 ASSETS_ROOT.mkdir(parents=True, exist_ok=True)
+CUSTOM_ASSETS_ROOT = Path(__file__).resolve().parents[2] / "assets" / "customize"
+CUSTOM_ASSETS_ROOT.mkdir(parents=True, exist_ok=True)
 LICENSE_PATH = ASSETS_ROOT / "LICENSE_LUCIDE.txt"
 
 # Lucide static endpoints (SVG-first; PNG converted locally if possible)
@@ -131,6 +135,32 @@ def _convert_svg_to_png(svg_path: Path, png_path: Path) -> bool:
         return False
 
 
+def _resolve_local_icon(
+    name: str,
+    root: Path,
+    prefer_png: bool,
+    allow_svg_fallback: bool,
+) -> str | None:
+    """Resolve a named icon under one directory root."""
+    png_path = root / f"{name}.png"
+    svg_path = root / f"{name}.svg"
+
+    if png_path.exists():
+        return str(png_path)
+
+    if svg_path.exists() and prefer_png:
+        converted = _convert_svg_to_png(svg_path, png_path)
+        if converted and png_path.exists():
+            return str(png_path)
+        if allow_svg_fallback:
+            return str(svg_path)
+
+    if svg_path.exists() and (allow_svg_fallback or not prefer_png):
+        return str(svg_path)
+
+    return None
+
+
 def ensure_lucide_icons(
     icon_names: Iterable[str] | None = None,
     download: bool = True,
@@ -138,15 +168,32 @@ def ensure_lucide_icons(
     allow_svg_fallback: bool = False,
 ) -> List[str]:
     """
-    Ensure requested Lucide icons are present in the local cache.
+    Ensure requested icons are present.
+    Lookup order per icon name:
+      1) assets/customize (local custom override)
+      2) assets/lucide cache
+      3) download Lucide SVG (if allowed)
     Returns a sorted list of usable icon file paths (PNG preferred, SVG fallback).
     """
     _write_license_note()
     ensure_dir(str(ASSETS_ROOT))
+    ensure_dir(str(CUSTOM_ASSETS_ROOT))
     names = list(icon_names or DEFAULT_LUCIDE_ICONS)
     available: List[str] = []
 
     for name in names:
+        # 1) Custom local override
+        custom_icon = _resolve_local_icon(
+            name=name,
+            root=CUSTOM_ASSETS_ROOT,
+            prefer_png=prefer_png,
+            allow_svg_fallback=allow_svg_fallback,
+        )
+        if custom_icon:
+            available.append(custom_icon)
+            continue
+
+        # 2) Lucide local cache
         png_path = ASSETS_ROOT / f"{name}.png"
         svg_path = ASSETS_ROOT / f"{name}.svg"
 
@@ -185,6 +232,65 @@ def ensure_lucide_icons(
             available.append(str(svg_path))
 
     return sorted(set(available))
+
+
+def list_custom_icons(
+    prefer_png: bool = True,
+    allow_svg_fallback: bool = False,
+    root: Path | None = None,
+) -> List[str]:
+    """List all usable icons under assets/customize (or provided root)."""
+    icon_root = root or CUSTOM_ASSETS_ROOT
+    ensure_dir(str(icon_root))
+
+    stems = set()
+    for path in icon_root.iterdir():
+        if path.is_file() and path.suffix.lower() in {".png", ".svg"}:
+            stems.add(path.stem)
+
+    resolved: List[str] = []
+    for stem in sorted(stems):
+        icon_path = _resolve_local_icon(
+            name=stem,
+            root=icon_root,
+            prefer_png=prefer_png,
+            allow_svg_fallback=allow_svg_fallback,
+        )
+        if icon_path:
+            resolved.append(icon_path)
+
+    return resolved
+
+
+def resolve_task_icons(
+    icon_names: Iterable[str] | None = None,
+    download: bool = True,
+    prefer_png: bool = True,
+    allow_svg_fallback: bool = False,
+) -> List[str]:
+    """Resolve icons for tasks.
+
+    Behavior:
+    - If `icon_names` is provided: resolve each name (customize -> lucide -> download).
+    - If `icon_names` is not provided:
+      - use all icons under assets/customize if any exist,
+      - otherwise use default Lucide icon names.
+    """
+    if icon_names is None:
+        custom_icons = list_custom_icons(
+            prefer_png=prefer_png,
+            allow_svg_fallback=allow_svg_fallback,
+        )
+        if custom_icons:
+            return sorted(set(custom_icons))
+        icon_names = DEFAULT_LUCIDE_ICONS
+
+    return ensure_lucide_icons(
+        icon_names=icon_names,
+        download=download,
+        prefer_png=prefer_png,
+        allow_svg_fallback=allow_svg_fallback,
+    )
 
 
 def select_icons_deterministic(seed: int | None, icons: Sequence[str], count: int) -> List[str]:

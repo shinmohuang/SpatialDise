@@ -429,8 +429,8 @@ class ShapeFinding3DGenerator(FoldingBase):
         # random seed for reproducibility
         seed = hash(f"shape_question_{q_id}") % 10000
         random.seed(seed)
-        self.icon_files = icon_utils.ensure_lucide_icons(
-            self.config.get("lucide_icons", icon_utils.DEFAULT_LUCIDE_ICONS),
+        self.icon_files = icon_utils.resolve_task_icons(
+            self.config.get("lucide_icons"),
             download=self.config.get("lucide_download", True),
             prefer_png=True,
             allow_svg_fallback=False,

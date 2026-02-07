@@ -1,0 +1,77 @@
+defaults:
+  # Global output root (effective when per-task output_dir is not set)
+  output_root: blender_dataset
+
+  # Core generation controls
+  num_questions: 20
+  image_resolution: [640, 480]
+  difficulty: medium
+  num_distractors: 3
+
+  # Shape controls
+  num_cells_min: 5
+  num_cells_max: 10
+  use_rectangular_prisms: true
+  rectangular_prism_prob: 0.3
+  distractor_difficulty: 0.6
+  collision_threshold: 0.05
+
+  # Render controls
+  render_engine: CYCLES
+  use_gpu: true
+  wireframe_render: true
+  ortho_scale: 15.0
+
+  # Optional/legacy-compatible keys (safe to keep in config)
+  camera_distance_factor: 1.0
+  material_style: solid
+  auto_generate_views: true
+  num_candidates: 8
+
+  # Icon controls (used by 3d_folding and 3d_shape_finding)
+  lucide_download: false
+  # lucide_icons: [circle, square, triangle, heart]
+
+tasks:
+  - task: 3d_rotation
+    difficulty: hard
+    num_questions: 30
+    num_distractors: 3
+    num_cells_min: 6
+    num_cells_max: 12
+    distractor_difficulty: 0.8
+
+  - task: 3d_projection
+    difficulty: medium
+    num_questions: 30
+    num_distractors: 3
+    num_cells_min: 5
+    num_cells_max: 10
+    distractor_difficulty: 0.5
+
+  - task: 3d_combination
+    difficulty: hard
+    num_questions: 30
+    num_distractors: 3
+    num_cells_min: 6
+    num_cells_max: 11
+    rectangular_prism_prob: 0.5
+
+  - task: 3d_folding
+    difficulty: medium
+    num_questions: 20
+    num_distractors: 3
+    # If not set, resolver will use:
+    # 1) assets/customize (if any icons exist), otherwise
+    # 2) default Lucide icon list.
+    lucide_icons: [circle, square, triangle, heart, moon, star]
+    lucide_download: false
+    # Recommended: put your own PNG icons in assets/customize/
+
+  - task: 3d_shape_finding
+    difficulty: medium
+    num_questions: 20
+    ortho_scale: 5.0
+    lucide_icons: [circle, square, triangle, heart, moon, star]
+    lucide_download: false
+    # SVG fallback is disabled in this task; PNG icons are strongly recommended.

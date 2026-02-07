@@ -106,6 +106,53 @@ blender --background --python generator/cli/config_generate.py -- \
   --task 3d_shape_finding
 ```
 
+## Config System
+
+SpatialDise supports two config styles:
+
+1. Multi-task config (recommended): `defaults` + `tasks`
+2. Single-task config: one task object at root
+
+Example (multi-task):
+
+```yaml
+defaults:
+  output_root: blender_dataset
+  image_resolution: [640, 480]
+  num_questions: 20
+  difficulty: medium
+  use_gpu: true
+
+tasks:
+  - task: 3d_rotation
+    difficulty: hard
+    num_questions: 30
+
+  - task: 3d_folding
+    difficulty: medium
+    lucide_download: false
+```
+
+Config behavior:
+
+- Each task config is merged as: `task_item` overrides `defaults`.
+- `task` is required per job (or `name` / `generator` as fallback).
+- `preset` is ignored in `config_generate.py`; use explicit fields like
+  `difficulty`, `num_cells_min`, `num_cells_max`, `distractor_difficulty`.
+- `image_resolution` can be `[W, H]`; it is normalized to `(W, H)` internally.
+
+Output directory behavior:
+
+- If `output_dir` is set in a task, it is used directly.
+- Else if `output_root` is set, output is:
+  `output_root/<TaskDefaultName>/<difficulty>` (difficulty suffix only when set).
+- Else default output is used (`blender_dataset/3D_*`, with optional difficulty suffix).
+
+Available example configs:
+
+- Basic example: `configs/spatialdise_3d.yaml`
+- Full-parameter example: `configs/spatialdise_3d_full_example.yaml`
+
 ## Task Names
 
 Supported task names:
@@ -132,9 +179,36 @@ Each task writes:
 - per-question metadata JSON
 - a summary file
 
-## Lucide Icon Cache (Folding / Shape Finding)
+## Icon Sources (Folding / Shape Finding)
 
-These tasks use icon textures from Lucide. You can pre-cache icons:
+`3d_folding` and `3d_shape_finding` can use:
+
+- Lucide icons under `assets/lucide/`
+- Custom icons under `assets/customize/`
+
+Recommended format: **PNG**.
+
+- Put custom icons in `assets/customize/*.png` whenever possible.
+- `3d_shape_finding` uses `allow_svg_fallback=false`, so SVG-only icons may be skipped.
+
+### Runtime Resolution Rules
+
+When `lucide_icons` is **not set**:
+
+- If `assets/customize/` has icons, use all available custom icons.
+- Otherwise, use the default Lucide icon list.
+
+When `lucide_icons` **is set**:
+
+Each icon name is resolved in this order:
+
+1) `assets/customize/{name}.png|.svg`  
+2) `assets/lucide/{name}.png|.svg`  
+3) download from Lucide (when `lucide_download: true`)
+
+### Pre-cache Lucide Icons
+
+You can pre-cache Lucide icons:
 
 ```bash
 uv run generator/scripts/cache_lucide_icons.py -- --icons circle square triangle
@@ -152,9 +226,17 @@ If PNG conversion fails, install `cairosvg` or allow SVG fallback with:
 uv run generator/scripts/cache_lucide_icons.py -- --allow-svg-fallback
 ```
 
-## Replace or Customize Icons
+### Lucide License
 
-`3d_folding` and `3d_shape_finding` support custom icon sets via `lucide_icons`.
+- Source: https://lucide.dev
+- License: ISC
+- Copyright: Lucide Contributors
+- Local license note: `assets/lucide/LICENSE_LUCIDE.txt`
+
+When redistributing generated assets that include Lucide icons, keep the
+license attribution above.
+
+## Replace or Customize Icons
 
 ### Use a custom icon list
 
@@ -188,29 +270,12 @@ rm -f assets/lucide/*.png assets/lucide/*.svg
 uv run generator/scripts/cache_lucide_icons.py -- --icons-file ./my_icons.txt
 ```
 
-### Use the custom icons during generation
-
-Set `lucide_icons` in your config (per-task or in `defaults`):
-
-```yaml
-defaults:
-  lucide_download: false
-
-tasks:
-  - task: 3d_folding
-    difficulty: medium
-    lucide_icons: [circle, square, triangle, heart]
-
-  - task: 3d_shape_finding
-    difficulty: medium
-    lucide_icons: [circle, square, triangle, heart]
-```
-
 Notes:
 
 - `lucide_download: false` means use local cache only.
 - `lucide_download: true` allows downloading missing icons at runtime.
-- Keep icon names aligned with Lucide icon slugs.
+- If an icon with the same name exists in `assets/customize/`, it overrides Lucide.
+- For best compatibility, store custom icons as PNG files.
 
 ## Testing
 

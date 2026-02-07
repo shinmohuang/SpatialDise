@@ -15,9 +15,9 @@ import os
 import sys
 from pathlib import Path
 
-# Add the root directory of SpatialDise to sys.path
+# Add the repository root (containing `generator/`) to sys.path
 script_dir = Path(__file__).resolve().parent
-sys.path.insert(0, str(script_dir.parent.parent.parent))
+sys.path.insert(0, str(script_dir.parent.parent))
 
 from generator.core import icons as icon_utils
 from generator.core.logging import info, warn
@@ -33,8 +33,8 @@ def parse_args():
                         help="Download all available Lucide icons (from icons.json)")
     parser.add_argument("--prefer-png", action="store_true", default=True,
                         help="Prefer PNG output (default on)")
-    parser.add_argument("--allow-svg-fallback", action="store_true", default=True,
-                        help="Keep SVG if PNG conversion fails (useful if cairosvg is missing)")
+    parser.add_argument("--allow-svg-fallback", action="store_true",
+                        help="Keep SVG if PNG conversion fails (default off)")
     return parser.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:])
 
 

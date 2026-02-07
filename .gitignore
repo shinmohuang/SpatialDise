@@ -5,6 +5,9 @@ __pycache__/
 # AGENTS.md
 # openspec/
 .vscode/
+cognitive_world_model/
+*.tar.zst
+tmp/
 
 # C extensions
 *.so
@@ -28,6 +31,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+repro/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

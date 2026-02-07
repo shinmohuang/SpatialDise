@@ -21,17 +21,11 @@ def parse_arguments():
         "3d_combination",
         "3d_projection",
         "3d_shape_finding",
-        "rotation",
-        "combination",
-        "projection",
-        "view_matching",
-        "box_folding",
-        "shape_finding",
     ]
     parser = argparse.ArgumentParser(description="SpatialDise generator CLI")
     parser.add_argument("--task", type=str, default="3d_rotation",
                         choices=choices,
-                        help="Task name (3d_* or legacy alias)")
+                        help="Task name")
     parser.add_argument("--output-dir", type=str, default=None,
                         help="Output directory (defaults by task)")
     parser.add_argument("--num-questions", type=int, default=10,
@@ -84,7 +78,7 @@ def parse_resolution(res_str: str) -> Tuple[int, int]:
 
 
 def get_preset_config(preset: str, task: str):
-    """Reapply legacy presets to keep old behavior compatible."""
+    """Apply preset defaults for a task."""
     base_config = {}
     if preset == "easy":
         base_config = {
@@ -114,7 +108,7 @@ def get_preset_config(preset: str, task: str):
             "difficulty": "hard",
         }
 
-    if task in ("3d_combination", "combination"):
+    if task == "3d_combination":
         if preset == "easy":
             base_config["num_cells_min"] = 4
             base_config["num_cells_max"] = 6
@@ -124,12 +118,12 @@ def get_preset_config(preset: str, task: str):
         elif preset == "hard":
             base_config["num_cells_min"] = 6
             base_config["num_cells_max"] = 10
-    elif task in ("3d_projection", "view_matching", "projection"):
+    elif task == "3d_projection":
         if preset == "hard":
             base_config["num_cells_min"] = 7
-    elif task in ("3d_folding", "box_folding"):
+    elif task == "3d_folding":
         base_config["difficulty"] = preset
-    elif task in ("3d_shape_finding", "shape_finding"):
+    elif task == "3d_shape_finding":
         base_config["num_distractors"] = 3
         base_config["ortho_scale"] = 5.0
         base_config["difficulty"] = preset

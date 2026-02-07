@@ -322,7 +322,7 @@ def create_combination_shape(ctx, use_rectangular=None, rect_prob=None, seed=Non
         from generator.core import logging as log
         for existing_obj in created_objects:
             if ctx.check_collision(obj, existing_obj):
-                log.warn(f"警告: 检测到在位置 {pos} 的方块与现有方块碰撞")
+                log.warn(f"Warning: Detected at position {pos} block collides with existing blocks")
                 break
         created_objects.append(obj)
         obj.display_type = 'WIRE'

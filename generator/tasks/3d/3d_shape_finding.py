@@ -49,18 +49,20 @@ class ShapeFinding3DGenerator(FoldingBase):
         default = {
             "num_questions": 10,
             "image_resolution": (640, 480),
-            "difficulty": "medium",  # 默认难度改为 medium
-            "ortho_scale": 5.0  # 缩小相机视角以放大V0-V2图片中的物体，从默认的15.0缩小到8.0
-        }
+            "difficulty": "medium",  # medium
+            "ortho_scale": 5.0  # V0-V2, 15.08.0
+            }
         if config is None:
             config = {}
         merged = {**default, **config}
+        if output_dir is None:
+            output_dir = "blender_dataset/3D_shape_finding"
         super().__init__(output_dir=output_dir, config=merged)
 
-        # 标记场景是否已初始化，避免重复设置光源
+ # scene, avoidset
         self._scene_initialized = False
 
-        # 添加面名称映射
+ # face
         self.face_index_to_name = {
             0: "front",
             1: "top",
@@ -71,13 +73,13 @@ class ShapeFinding3DGenerator(FoldingBase):
         }
 
     def setup_scene_once(self):
-        """设置场景，但只在第一次调用时执行，避免重复创建光源"""
+        """setscene, in, avoidcreate"""
         if not self._scene_initialized:
             super().setup_scene()
             self._scene_initialized = True
             print("Scene initialized for shape finding generator")
         else:
-            # 只更新渲染设置，不重新创建光源
+ # set, create
             scene = bpy.context.scene
             scene.render.resolution_x = self.config["image_resolution"][0]
             scene.render.resolution_y = self.config["image_resolution"][1]
@@ -126,9 +128,9 @@ class ShapeFinding3DGenerator(FoldingBase):
         direction = center_world - cam_loc
         rot_quat = direction.to_track_quat('-Z', 'Y')
         camera.rotation_euler = rot_quat.to_euler()
-        # Orthographic settings - 保持选项图片的原始大小
+        # Orthographic settings -
         camera.data.type = 'ORTHO'
-        camera.data.ortho_scale = 3.0  # 恢复到原来的 3.0，保持选项图片 O0-O3 的原始大小
+        camera.data.ortho_scale = 3.0  # 3.0, O0-O3
         bpy.context.view_layer.update()
 
     # ------------------------------------------------------------------
@@ -136,7 +138,7 @@ class ShapeFinding3DGenerator(FoldingBase):
     # ------------------------------------------------------------------
 
     def _choose_views_by_difficulty(self, difficulty: str, seed: int | None = None):
-        """根据难度选择三个视角，给定 seed 保证可复现。"""
+        """, seed ."""
         rng = random.Random(seed)
         if difficulty == "easy":
             views = []
@@ -175,7 +177,7 @@ class ShapeFinding3DGenerator(FoldingBase):
         return views
 
     def _render_initial_views(self, q_id, cam, views, difficulty: str):
-        """渲染前两个视图 V0/V1 并返回图像路径列表。"""
+        """view V0/V1 ."""
         view_images = []
         for i, view in enumerate(views[:2]):
             self.set_camera_to_view(cam, view, add_randomness=False)
@@ -197,7 +199,7 @@ class ShapeFinding3DGenerator(FoldingBase):
     # ------------------------------------------------------------------
 
     def _select_replaced_face(self, views, third_view, difficulty: str, seed: int | None):
-        """根据难度选择要被替换为蓝色的面索引。"""
+        """difficultyselectface index."""
         rng = random.Random(seed)
         visible_faces_third = self.get_visible_faces(third_view)
 
@@ -283,7 +285,7 @@ class ShapeFinding3DGenerator(FoldingBase):
     def _render_third_view_with_blue_face(
         self, q_id, cam, cube, third_view, replaced_face_idx, difficulty: str
     ):
-        """在第三视图中把指定面染蓝并渲染 V2，之后恢复原材质。"""
+        """view V2, ."""
         original_material = cube.material_slots[replaced_face_idx].material
         cube.material_slots[replaced_face_idx].material = self._create_blue_material()
 
@@ -305,7 +307,7 @@ class ShapeFinding3DGenerator(FoldingBase):
     def _build_option_faces(
         self, difficulty: str, views, replaced_face_idx: int, seed: int | None
     ):
-        """根据难度生成四个选项面的索引，并返回 (option_faces, correct_index)。"""
+        """, (option_faces, correct_index)."""
         rng = random.Random(seed)
         if difficulty == "easy":
             union_visible_faces = set()
@@ -381,7 +383,7 @@ class ShapeFinding3DGenerator(FoldingBase):
         original_sun_location,
         original_sun_rotation,
     ):
-        """根据 option_faces 渲染选项图片，并恢复光源设置。"""
+        """option_faces , ."""
         option_images = []
         for opt_idx, face_idx in enumerate(option_faces):
             self._set_camera_for_face(cam, cube, face_idx)
@@ -434,7 +436,7 @@ class ShapeFinding3DGenerator(FoldingBase):
             allow_svg_fallback=False,
         )
 
-        # 获取难度设置，默认 medium
+        # , medium
         difficulty = self.config.get("difficulty", "medium")
 
         cube, face_assignments = self.create_cube_with_textures(seed=seed)
@@ -444,7 +446,7 @@ class ShapeFinding3DGenerator(FoldingBase):
 
         cam = bpy.context.scene.camera
 
-        # 保存初始光源设置，避免在选项图片生成过程中累计修改
+ # set, avoidingeneratein
         sun = bpy.data.objects.get("Sun")
         original_sun_location = None
         original_sun_rotation = None
@@ -490,7 +492,7 @@ class ShapeFinding3DGenerator(FoldingBase):
         # ------------------------------------------------------------------
         metadata = {
             "question_id": q_id,
-            "question_type": "shape_finding",
+            "question_type": "3d_shape_finding",
             # use third view as main question image
             "question_image": view_images[-1],
             "views": view_images,
@@ -523,7 +525,7 @@ class ShapeFinding3DGenerator(FoldingBase):
             try:
                 meta = self.generate_question(q)
                 meta_files.append(meta)
-                # 只保存 meta 数据，不生成额外的 question json 文件
+                # meta , question json
                 question_files.append(meta)
             except Exception as e:
                 import traceback

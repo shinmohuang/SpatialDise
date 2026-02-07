@@ -1,5 +1,5 @@
 """
-Task registry mapping canonical task names (and aliases) to generator classes.
+Task registry mapping canonical task names to generator classes.
 Supports file names beginning with digits by loading via importlib from paths.
 """
 
@@ -20,22 +20,10 @@ TASK_FILES = {
     "3d_shape_finding": ("3d_shape_finding.py", "ShapeFinding3DGenerator"),
 }
 
-TASK_ALIASES: Dict[str, str] = {
-    "rotation": "3d_rotation",
-    "combination": "3d_combination",
-    "projection": "3d_projection",
-    "view_matching": "3d_projection",
-    "box_folding": "3d_folding",
-    "shape_finding": "3d_shape_finding",
-}
-
-
 def normalize_task_name(name: str) -> str:
-    name = name.strip()
-    if name in TASK_FILES:
-        return name
-    if name in TASK_ALIASES:
-        return TASK_ALIASES[name]
+    task_name = name.strip()
+    if task_name in TASK_FILES:
+        return task_name
     raise ValueError(f"Unknown task name: {name}")
 
 

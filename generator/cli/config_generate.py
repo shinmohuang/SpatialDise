@@ -16,10 +16,10 @@ Config format (YAML example, single difficulty field):
 
   tasks:
     - task: 3d_folding
-      output_dir: blender_dataset/box_folding
+      output_dir: blender_dataset/3D_folding
       difficulty: medium
     - task: 3d_rotation
-      output_dir: blender_dataset/3d_rotation
+      output_dir: blender_dataset/3D_rotation
       num_questions: 100
       difficulty: hard
 """

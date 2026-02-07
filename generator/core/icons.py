@@ -62,9 +62,9 @@ LUCIDE_GITHUB_CONTENTS = "https://api.github.com/repos/lucide-icons/lucide/conte
 def _write_license_note() -> None:
     if LICENSE_PATH.exists():
         return
-        note = (
-            "Lucide Icons\n"
-            "Source: https://lucide.dev\n"
+    note = (
+        "Lucide Icons\n"
+        "Source: https://lucide.dev\n"
         "License: ISC\n"
         "Copyright (c) Lucide Contributors\n"
     )

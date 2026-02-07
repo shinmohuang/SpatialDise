@@ -27,13 +27,12 @@ class CombinationGenerator(BaseGenerator):
             output_dir (str): Directory to save generated files. If None, a default is used.
             config (dict): Configuration dictionary. If None, default values are used.
         """
-        # 更改默认目录名
         if output_dir is None:
-            output_dir = "blender_dataset/combination"
+            output_dir = "blender_dataset/3D_combination"
 
-        super().__init__("combination", output_dir, config)
+        super().__init__("3D_combination", output_dir, config)
 
-        # 根据难度标签调整方块数量范围，以拉开题目复杂度
+ # difficultyblockcount,
         difficulty_label = self.config.get("difficulty", "easy")
         if difficulty_label == "easy":
             self.config["num_cells_min"] = 3
@@ -76,9 +75,9 @@ class CombinationGenerator(BaseGenerator):
         avg_size_y /= total_blocks
         avg_size_z /= total_blocks
 
-        # 根据平均尺寸调整间距：
-        # - 比原始实现略大一些，用于减少遮挡
-        # - 同时保持尽量紧凑的布局
+ # :
+ # - original, for
+ # - keep
         spacing = max(1.5, avg_size_x * 1.4)
         return spacing
 
@@ -89,10 +88,10 @@ class CombinationGenerator(BaseGenerator):
 
         components = []
         for i, block in enumerate(blocks):
-            # 取消原来的父级关系
+            # Detach from the original parent.
             block.parent = None
 
-            # 创建新的父对象（包装器）
+ # createobject()
             wrapper = bpy.data.objects.new(f"Component_{i}", None)
             bpy.context.scene.collection.objects.link(wrapper)
 
@@ -104,11 +103,11 @@ class CombinationGenerator(BaseGenerator):
                 "original_world_pos": world_positions[i]
             })
 
-            # 设置方块为包装器的子级，并放回原世界位置
+ # setblock, and
             block.parent = wrapper
             block.matrix_world.translation = world_positions[i]
 
-            # 将包装器设为分离主对象的子级
+ # object
             wrapper.parent = segmented_master
 
             bpy.context.view_layer.update()
@@ -117,18 +116,18 @@ class CombinationGenerator(BaseGenerator):
 
     def _layout_segment_components(self, components, spacing):
         """
-        将分离组件布局为规则网格，以获得尽量清晰、不遮挡的展示效果。
+        component,,.
 
-        布局策略：
-        - 所有组件放在同一水平面 (y=0)，避免上下遮挡。
-        - 在 x-z 平面上按行列均匀排布，单元格大小基于最大块尺寸放大数倍，
-          从而在等轴视角下也有充分间距。
+        :
+        - (y=0), .
+        - x-z , ,
+          fromin.
         """
         count = len(components)
         if count == 0:
             return
 
-        # 估计组件的最大尺寸，用于设置网格单元大小
+ # component, forset
         max_dim = 0.0
         for comp in components:
             block = comp["block"]
@@ -141,22 +140,22 @@ class CombinationGenerator(BaseGenerator):
                     float(dims.z),
                 )
 
-        # 兜底
+        # Fallback when dimensions could not be estimated.
         if max_dim <= 0.0:
             max_dim = 1.0
 
-        # 单元格边长：保证相邻组件在 x/z 方向不会发生实际碰撞，
-        # 但尽量压缩间距以获得更紧凑的展示。
-        # 若每个组件在 x/z 方向的最大尺寸为 max_dim，
-        # 则 cell_size >= 1.3 * max_dim 可以保证中心间距 > max_dim，
-        # 这样两个组件的包围盒不会重叠。
+        # : x/z ,
+ # .
+        # x/z max_dim,
+        # cell_size >= 1.3 * max_dim > max_dim,
+ # component.
         cell_size = max(spacing, max_dim * 1.3)
 
-        # 计算合适的网格行列数，使得接近方形布局
+ # ,
         cols = max(1, int(math.ceil(math.sqrt(count))))
         rows = int(math.ceil(count / cols))
 
-        # 使整个网格以原点为中心，方便与相机视角对齐
+ # in, andcamera
         offset_x = -(cols - 1) * cell_size * 0.5
         offset_z = (rows - 1) * cell_size * 0.5
 
@@ -166,12 +165,12 @@ class CombinationGenerator(BaseGenerator):
             x = offset_x + col * cell_size
             z = offset_z - row * cell_size
 
-            # 先放在规则网格位置
+ # in
             comp["wrapper"].location = (x, 0.0, z)
             bpy.context.view_layer.update()
 
-            # 与已放置组件做一次碰撞检测；如有碰撞，退回到带碰撞检测的
-            # calculate_optimal_position 逻辑进一步调整位置。
+ # andcomponent;, to
+            # calculate_optimal_position .
             has_collision = False
             for j in range(idx):
                 other_block = components[j]["block"]
@@ -188,26 +187,26 @@ class CombinationGenerator(BaseGenerator):
 
     def create_segmented_shape(self, master_obj, spacing=2.0):
         """
-        将完整形状分解为独立的组件，并排列展示
+        shapecomponent, and
 
         Args:
-            master_obj: 包含所有组件的主对象
-            spacing: 组件之间的间距
+            master_obj:
+            spacing:
 
         Returns:
-            包含所有分离组件的列表
+            allcomponentlist
         """
         blocks, original_positions, world_positions = self._snapshot_block_states(
             master_obj)
 
-        # 根据平均尺寸调整间距
+        # Adjust spacing based on average component size.
         spacing = self._compute_segment_spacing(blocks, spacing)
 
-        # 创建包装器但不布局
+ # create
         components, segmented_master = self._instantiate_segment_wrappers(
             blocks, original_positions, world_positions)
 
-        # 应用布局算法，避免重叠
+ # , avoid
         self._layout_segment_components(components, spacing)
 
         bpy.context.view_layer.update()
@@ -216,28 +215,28 @@ class CombinationGenerator(BaseGenerator):
 
     def restore_original_shape(self, components, original_positions):
         """
-        将分离的组件恢复为原始形状
+        componentrestoreoriginalshape
 
         Args:
-            components: 组件列表
-            original_positions: 原始位置列表
+            components:
+            original_positions:
         """
         for comp, orig_pos in zip(components, original_positions):
             block = comp["block"]
             orig_location, orig_parent = orig_pos
 
-            # 恢复原始父级关系
+ # restoreoriginal
             block.parent = orig_parent
 
-            # 恢复原始位置
+ # restoreoriginal
             if orig_parent:
-                # 如果有父对象，需要设置相对位置
+ # ifobject, set
                 block.location = orig_location
             else:
-                # 如果没有父对象，设置世界位置
+ # ifobject, set
                 block.matrix_world.translation = orig_location
 
-        # 更新场景以确保正确计算
+ # sceneensure
         bpy.context.view_layer.update()
 
     # ------------------------------------------------------------------
@@ -259,9 +258,9 @@ class CombinationGenerator(BaseGenerator):
 
         cubes = [obj for obj in original_obj.children]
         if not cubes:
-            print("警告: 没有生成任何方块!")
+            print("Warning: No blocks were generated!")
         else:
-            print(f"生成了 {len(cubes)} 个方块")
+            print(f"Generated {len(cubes)} blocks")
         return original_obj, cubes
 
     def _render_question_and_opposite_views(self, q_id, cam, cubes):
@@ -271,19 +270,19 @@ class CombinationGenerator(BaseGenerator):
         Returns camera states and image paths so that `generate_question`
         can assemble metadata without duplicating rendering logic.
         """
-        # 扩大相机视场，确保能够看到更多内容
+ # camera, ensureto
         try:
             if hasattr(cam.data, "ortho_scale"):
                 original_ortho_scale = cam.data.ortho_scale
-                # 扩大为原来的1.5倍，确保视野足够宽
-                cam.data.ortho_scale = 18  # 与旧实现保持一致
+ # 1.5, ensure
+                cam.data.ortho_scale = 18 # andkeep
             else:
                 original_ortho_scale = 18
         except Exception as e:
-            print(f"调整相机视场失败: {e}")
+            print(f"Failed to adjust camera view scale: {e}")
             original_ortho_scale = 12
 
-        # 使用 find_best_view 找到最佳视角
+        # find_best_view
         question_view, visible_count = self.find_best_view(
             self.iso_views,
             cubes,
@@ -292,18 +291,18 @@ class CombinationGenerator(BaseGenerator):
             auto_generate=True,
             num_candidates=8,
         )
-        print(f"选择视角: {question_view['name']} 可见方块数: {visible_count}")
+        print(f"Selected view: {question_view['name']} visible block count: {visible_count}")
 
-        # 设置相机到问题视角
+        # question
         self.set_camera_to_view(cam, question_view, add_randomness=True)
 
-        # 计算形状的几何中心，并让相机对准中心
+ # shapein, andcamerain
         shape_center = self.get_shape_center(cubes)
         direction = mathutils.Vector(shape_center) - cam.location
         rot_quat = direction.to_track_quat("-Z", "Y")
         cam.rotation_euler = rot_quat.to_euler()
 
-        # 缩小 ortho_scale 来放大 question 图片中的物体
+        # ortho_scale question
         if hasattr(cam.data, "ortho_scale"):
             cam.data.ortho_scale = 8.0
         bpy.context.view_layer.update()
@@ -311,21 +310,21 @@ class CombinationGenerator(BaseGenerator):
         question_location = cam.location.copy()
         question_rotation = cam.rotation_euler.copy()
 
-        # 渲染题目图像 (完整形状)
+ # (shape)
         question_img = os.path.join(self.output_dir, f"{q_id}_Q.png")
         self.render_image(question_img)
 
-        # 构建对面视角
+ # face
         opposite_view = question_view.copy()
         opposite_view["name"] = "opposite_" + question_view["name"]
 
         pos_x, pos_y, pos_z = question_view["pos"]
         opposite_view["pos"] = (-pos_x, -pos_y, -pos_z)
 
-        # 设置相机到对面视角
+ # setcameratoface
         self.set_camera_to_view(cam, opposite_view, add_randomness=False)
 
-        # 同样让相机对准形状中心
+ # camerashapein
         direction = mathutils.Vector(shape_center) - cam.location
         rot_quat = direction.to_track_quat("-Z", "Y")
         cam.rotation_euler = rot_quat.to_euler()
@@ -336,15 +335,15 @@ class CombinationGenerator(BaseGenerator):
         opposite_location = cam.location.copy()
         opposite_rotation = cam.rotation_euler.copy()
 
-        # 渲染对面视角图像
+ # face
         opposite_img = os.path.join(self.output_dir, f"{q_id}_Q_opposite.png")
         self.render_image(opposite_img)
 
-        # 为后续选项渲染恢复到较大的视场
+ # afterrestoreto
         if hasattr(cam.data, "ortho_scale"):
             cam.data.ortho_scale = 18
 
-        # 将相机设置回问题视角
+        # question
         cam.location = question_location
         cam.rotation_euler = question_rotation
         bpy.context.view_layer.update()
@@ -363,39 +362,38 @@ class CombinationGenerator(BaseGenerator):
 
     def create_distractor(self, original_component, master_obj, seed, highlight_distractor=False):
         """
-        为指定组件创建干扰项
+        componentcreatedistractor
 
         Args:
-            original_component: 要替换的原始组件
-            master_obj: 原始形状的主对象
-            seed: 随机种子
-            highlight_distractor: 是否高亮显示干扰项（红色）
+            original_component:
+            master_obj:
+            seed:
+            highlight_distractor: ()
 
         Returns:
-            干扰项组件对象
+            distractorcomponentobject
         """
-        # 设置随机种子以确保可重现性
+ # setrandomensure
         random.seed(seed)
 
-        # 获取原始方块
+ # originalblock
         original_block = original_component["block"]
         wrapper = original_component["wrapper"]
 
-        # 确定原始形状
+ # originalshape
         orig_shape = None
-        orig_dimensions = (1, 1, 1)  # 默认立方体
-
-        # 尝试检测原始形状的尺寸
+        orig_dimensions = (1, 1, 1) # defaultcube
+ # originalshape
         if hasattr(original_block, "dimensions"):
             dims = original_block.dimensions
             orig_dimensions = (dims.x, dims.y, dims.z)
 
-            # 根据维度比例判断形状类型
+            # type
             max_dim = max(orig_dimensions)
             min_dim = min(orig_dimensions)
 
             if max_dim / min_dim > 1.5:
-                # 找出哪个维度是长的
+                # Infer original block type from dimensions.
                 if dims.x > dims.y and dims.x > dims.z:
                     orig_shape = self.shape_types[1]  # x_prism
                 elif dims.y > dims.x and dims.y > dims.z:
@@ -406,25 +404,24 @@ class CombinationGenerator(BaseGenerator):
                 orig_shape = self.shape_types[0]  # cube
 
         if orig_shape is None:
-            orig_shape = self.shape_types[0]  # 默认立方体
-
-        # 创建新的分散项
-        # 选择与原始形状不同的形状类型
+            orig_shape = self.shape_types[0] # defaultcube
+ # create
+        # type
         available_shapes = [s for s in self.shape_types if s != orig_shape]
-        if not available_shapes:  # 确保有可用形状
+        if not available_shapes: # ensureavailableshape
             available_shapes = self.shape_types
         distractor_shape = random.choice(available_shapes)
 
-        # 创建分散项的网格
+ # create
         mesh = bpy.data.meshes.new(f"{distractor_shape['name']}Mesh")
         distractor = bpy.data.objects.new(distractor_shape['name'], mesh)
         bpy.context.scene.collection.objects.link(distractor)
 
-        # 创建立方体使用bmesh
+        # bmesh
         bm = bmesh.new()
         bmesh.ops.create_cube(bm, size=1.0)
 
-        # 使用新形状的尺寸缩放
+ # shape
         dimensions = distractor_shape["dimensions"]
         for v in bm.verts:
             v.co.x *= dimensions[0]
@@ -434,58 +431,58 @@ class CombinationGenerator(BaseGenerator):
         bm.to_mesh(mesh)
         bm.free()
 
-        # 设置线框显示
+ # set
         distractor.display_type = 'WIRE'
 
-        # 创建材质 - 使用发射着色器消除反射
+ # creatematerial -
         mat = bpy.data.materials.new(name="DistractorMaterial")
         mat.use_nodes = True
 
-        # 获取节点树
+        # Access node-tree handles.
         nodes = mat.node_tree.nodes
         links = mat.node_tree.links
 
-        # 清除默认节点
+ # default
         for node in nodes:
             nodes.remove(node)
 
-        # 创建发射着色器节点（无反射）
+ # create()
         emission = nodes.new(type='ShaderNodeEmission')
-        emission.inputs['Color'].default_value = (0.7, 0.7, 0.7, 1.0)  # 深灰色
-        emission.inputs['Strength'].default_value = 1.0  # 发射强度
+        emission.inputs['Color'].default_value = (0.7, 0.7, 0.7, 1.0)  # Neutral gray emission color.
+        emission.inputs['Strength'].default_value = 1.0  # Keep contrast stable across renders.
         emission.location = (0, 0)
 
-        # 创建输出节点
+ # create
         output = nodes.new(type='ShaderNodeOutputMaterial')
         output.location = (200, 0)
 
-        # 连接节点 - 发射着色器直接连接到输出，完全无反射
+ # - to,
         links.new(emission.outputs['Emission'], output.inputs['Surface'])
 
-        # 应用材质
+ # material
         if distractor.data.materials:
             distractor.data.materials[0] = mat
         else:
             distractor.data.materials.append(mat)
 
-        # 确保材质在线框模式下可见
+ # ensurematerialin
         distractor.show_wire = True
         distractor.show_all_edges = True
 
-        # 设置分散项为包装器的子级
+ # set
         distractor.parent = wrapper
 
-        # 获取原始方块的世界变换
+ # originalblock
         original_world_matrix = original_block.matrix_world.copy()
 
-        # 设置干扰项的世界变换（保持与原始方块相同的位置和旋转）
+ # setdistractor(keepandoriginalblockrotation)
         distractor.matrix_world = original_world_matrix
 
-        # 临时隐藏原始方块（不删除，以便后续恢复）
+ # originalblock(delete, afterrestore)
         original_block.hide_viewport = True
         original_block.hide_render = True
 
-        # 更新场景以确保正确计算
+ # sceneensure
         bpy.context.view_layer.update()
 
         return {
@@ -497,41 +494,41 @@ class CombinationGenerator(BaseGenerator):
 
     def restore_from_distractor(self, distractor_component):
         """
-        恢复被干扰项替换的原始组件
+        restoredistractororiginalcomponent
 
         Args:
-            distractor_component: 干扰项组件信息
+            distractor_component:
         """
-        # 显示原始方块
+ # originalblock
         original_block = distractor_component["replaced_block"]
         original_block.hide_viewport = False
         original_block.hide_render = False
 
-        # 删除干扰项
+ # deletedistractor
         distractor = distractor_component["block"]
 
-        # 删除干扰项的材质
+ # deletedistractormaterial
         if distractor.data and distractor.data.materials:
             for i in range(len(distractor.data.materials)):
                 mat = distractor.data.materials[i]
                 if mat:
-                    # 尝试移除材质
+ # material
                     distractor.data.materials[i] = None
-                    # 如果材质没有其他用户，删除它
+ # ifmaterial, delete
                     if mat.users == 0:
                         bpy.data.materials.remove(mat)
 
-        # 删除干扰项对象
+ # deletedistractorobject
         if distractor.data:
             mesh = distractor.data
             bpy.data.objects.remove(distractor, do_unlink=True)
-            # 删除网格数据
+ # delete
             if mesh.users == 0:
                 bpy.data.meshes.remove(mesh)
         else:
             bpy.data.objects.remove(distractor, do_unlink=True)
 
-        # 更新场景以确保正确计算
+ # sceneensure
         bpy.context.view_layer.update()
 
     def _render_combination_options(
@@ -555,12 +552,12 @@ class CombinationGenerator(BaseGenerator):
         """
 
         def _visible_blocks_from_components():
-            """Return the currently可见的块对象列表（每个组件选择一个未隐藏的子块）."""
+            """Return the currently()."""
             blocks = []
             for comp in components:
                 wrapper = comp["wrapper"]
                 visible = None
-                # 优先选择未被隐藏用于渲染的子对象
+ # selectforobject
                 for child in wrapper.children:
                     if not getattr(child, "hide_render", False):
                         visible = child
@@ -569,18 +566,18 @@ class CombinationGenerator(BaseGenerator):
                     visible = comp["block"]
                 blocks.append(visible)
             return blocks
-        # 选择一个随机组件作为干扰项基准（用于初始种子和索引选择）
+        # as distractor()
         base_index = random.randint(0, len(components) - 1)
 
         options = []
         bpy.context.view_layer.update()
 
         components_count = len(components)
-        # 初始情况下只有原始块，直接统计可见块类型
+        # , type
         component_blocks = _visible_blocks_from_components()
         component_block_counts = self.count_block_types(component_blocks)
 
-        # 从预定义视角中选择 iso_front_top_left 作为选项视角
+        # iso_front_top_left
         front_top_left_view = None
         for view in self.iso_views:
             if view["name"] == "iso_front_top_left":
@@ -588,24 +585,24 @@ class CombinationGenerator(BaseGenerator):
                 break
 
         if front_top_left_view is None:
-            print("警告：找不到 iso_front_top_left 视角，使用默认视角")
+            print("Warning: iso_front_top_left ,")
             front_top_left_view = self.iso_views[0].copy()
 
         option_view = front_top_left_view
         option_view["name"] = "options_" + option_view["name"]
 
-        # 组件排列在原点附近，look_at 指向 (0,0,0)
+        # , look_at (0,0,0)
         option_view["look_at"] = (0, 0, 0)
 
-        # 调整视角，使其俯仰角更低一些（更接近水平视图），
-        # 但仍然从左前方略微俯视，兼顾形状关系与整体布局。
+        # , (view),
+ # frombefore, shapeand.
         base_pos = mathutils.Vector(option_view["pos"])
-        # 稍微减小高度、略微减小左右偏移，使视角更平、更靠中
+ # ,,, in
         base_pos.x *= 0.8
         base_pos.z *= 0.7
         option_view["pos"] = (base_pos.x, base_pos.y, base_pos.z)
 
-        # 根据组件数量调整相机距离（基于新的方向向量）
+ # componentcountcamera()
         distance_scale = max(1.1, components_count / 8.0)
         orig_pos = mathutils.Vector(option_view["pos"])
         direction = orig_pos.normalized()
@@ -613,11 +610,11 @@ class CombinationGenerator(BaseGenerator):
         new_pos = direction * new_distance
         option_view["pos"] = (new_pos.x, new_pos.y, new_pos.z)
 
-        # 设置相机到选项视角
+ # setcamerato
         self.set_camera_to_view(cam, option_view, add_randomness=False)
         bpy.context.view_layer.update()
 
-        # 1. 渲染正确答案（所有原始组件）
+ # 1. correct answer(alloriginalcomponent)
         correct_img = os.path.join(self.output_dir, f"{q_id}_A0.png")
         self.render_image(correct_img)
 
@@ -633,11 +630,11 @@ class CombinationGenerator(BaseGenerator):
         }
         options.append(correct_option)
 
-        # 2. 渲染干扰项，带有单解性约束，但避免整组反复重试：
-        #    - 同一题中 (cube_count, rect_prism_count) 组合不重复
+ # 2. distractor,, avoid:
+        # - (cube_count, rect_prism_count)
         num_distractors = self.config.get("num_distractors", 3)
 
-        # 记录已使用的 (cube, rect_prism) 组合（包含正确答案）
+        # (cube, rect_prism) ()
         used_pairs = {
             (
                 correct_option["block_counts"].get("cube", 0),
@@ -654,10 +651,10 @@ class CombinationGenerator(BaseGenerator):
             for attempt in range(max_attempts):
                 distractor_seed = question_seed + i * 1000 + attempt
 
-                # 本次干扰项要替换的组件数量：根据难度动态控制
-                # - easy: 尽量只替换 2 个组件
-                # - medium: 在 2 和 3 之间波动（如果组件数允许）
-                # - hard: 尽量替换到上限（最多 3 个）
+ # distractorcomponentcount: difficulty
+                # - easy: 2
+                # - medium: 2 3 ()
+                # - hard: ( 3 )
                 difficulty_label = self.config.get("difficulty", "easy")
                 components_count = len(components)
                 if components_count <= 1:
@@ -674,16 +671,16 @@ class CombinationGenerator(BaseGenerator):
                             replace_count = random.choice(
                                 [min_allowed, max_allowed]
                             )
-                    else:  # hard 及其他情况
+                    else:  # hard
                         replace_count = max_allowed
 
-                # 为该干扰项选择需要替换的组件索引集合
+ # distractorselectcomponentindex
                 available_indices = list(range(len(components)))
                 random.shuffle(available_indices)
                 replace_indices = available_indices[:replace_count]
 
                 applied_distractors = []
-                # 对选中的多个组件依次应用替换
+ # incomponent
                 for idx_offset, comp_idx in enumerate(replace_indices):
                     comp = components[comp_idx]
                     sub_seed = distractor_seed + idx_offset * 17
@@ -697,7 +694,7 @@ class CombinationGenerator(BaseGenerator):
 
                 bpy.context.view_layer.update()
 
-                # 使用当前可见块统计类型（其中多个组件已被干扰块替换）
+                # type()
                 current_blocks = _visible_blocks_from_components()
                 current_block_counts = self.count_block_types(current_blocks)
                 pair = (
@@ -705,13 +702,13 @@ class CombinationGenerator(BaseGenerator):
                     current_block_counts.get("rect_prism", 0),
                 )
 
-                # 如果该 (cube, rect) 组合已被使用，并且还有尝试机会，则撤销并重试
+                # (cube, rect) , ,
                 if pair in used_pairs and attempt < max_attempts - 1:
                     for d in applied_distractors:
                         self.restore_from_distractor(d)
                     continue
 
-                # 接受该候选（即使是最后一次尝试时重复，也会作为兜底）
+ # (after, )
                 distractor_img = os.path.join(
                     self.output_dir, f"{q_id}_A{i+1}.png"
                 )
@@ -733,7 +730,7 @@ class CombinationGenerator(BaseGenerator):
 
                 used_pairs.add(pair)
 
-                # 恢复原始组件，为下一个干扰项准备
+ # restoreoriginalcomponent, distractor
                 for d in applied_distractors:
                     self.restore_from_distractor(d)
 
@@ -744,7 +741,7 @@ class CombinationGenerator(BaseGenerator):
 
         options.extend(distractor_options)
 
-        # 恢复原始形状：移除包装器和分段主对象
+ # restoreoriginalshape: object
         for component in components:
             block = component["block"]
             wrapper = component["wrapper"]
@@ -753,14 +750,14 @@ class CombinationGenerator(BaseGenerator):
 
         bpy.data.objects.remove(segmented_master, do_unlink=True)
 
-        # 恢复相机视场
+ # restorecamera
         try:
             if hasattr(cam.data, "ortho_scale"):
                 cam.data.ortho_scale = original_ortho_scale
         except Exception as e:
-            print(f"恢复相机视场失败: {e}")
+            print(f"Failed to restore camera view scale: {e}")
 
-        # 重置相机到初始位置
+ # camerato
         cam.location = initial_cam_location
         cam.rotation_euler = initial_cam_rot
         bpy.context.view_layer.update()
@@ -768,30 +765,30 @@ class CombinationGenerator(BaseGenerator):
         return option_view, options
 
     def generate_question(self, q_id):
-        """生成一个3D形状拼装题目"""
-        print(f"生成题目 {q_id}...")
+        """3D"""
+        print(f"Generating question {q_id}...")
 
-        # 清除现有对象
+ # Clear existing objects
         self.clear_question_objects()
 
-        # 基于题目ID和难度创建种子以确保可重现性，
-        # 不同难度下同一题号会得到不同的形状
+        # ID,
+ # difficultytoshape
         difficulty_label = self.config.get("difficulty", "easy")
         question_seed = hash((q_id, difficulty_label)) % 100000
 
-        # 1. 构建目标形状
+ # 1. shape
         original_obj, cubes = self._build_target_shape(question_seed)
         if not cubes:
             return None
         original_block_count = len(cubes)
         original_block_counts = self.count_block_types(cubes)
 
-        # 保存相机初始位置
+ # camera
         cam = bpy.context.scene.camera
         initial_cam_location = cam.location.copy()
         initial_cam_rot = cam.rotation_euler.copy()
 
-        # 2. 渲染题干视图（完整形状 + 对面视角）
+        # 2. view( + )
         (
             question_view,
             question_location,
@@ -804,15 +801,15 @@ class CombinationGenerator(BaseGenerator):
             original_ortho_scale,
         ) = self._render_question_and_opposite_views(q_id, cam, cubes)
 
-        # 3. 构建分段视图
+        # 3. view
         components, segmented_master, original_positions = self.create_segmented_shape(
             original_obj)
         if not components:
-            print("警告: 没有创建任何组件!")
+            print("Warning: No components were created!")
             return None
-        print(f"创建了 {len(components)} 个分离组件")
+        print(f"Created {len(components)} separated components")
 
-        # 4 & 5. 生成组合干扰项并渲染选项图像
+ # 4 & 5. generatedistractorand
         option_view, options = self._render_combination_options(
             q_id,
             cam,
@@ -825,11 +822,11 @@ class CombinationGenerator(BaseGenerator):
             initial_cam_rot,
         )
 
-        # 创建元数据
+ # create
         meta = {
             "question_id": q_id,
             "question_image": question_img,
-            "opposite_view_image": opposite_img,  # 添加对面视角图像路径
+            "opposite_view_image": opposite_img, # face
             "seed": question_seed,
             "timestamp": datetime.now().isoformat(),
             "original_block_count": original_block_count,
@@ -839,8 +836,8 @@ class CombinationGenerator(BaseGenerator):
                 "camera_location": tuple(question_location),
                 "camera_rotation": tuple(question_rotation)
             },
-            "opposite_view": {  # 添加对面视角信息
-                "name": opposite_view["name"],
+            "opposite_view": { # face
+            "name": opposite_view["name"],
                 "camera_location": tuple(opposite_location),
                 "camera_rotation": tuple(opposite_rotation)
             },
@@ -853,7 +850,7 @@ class CombinationGenerator(BaseGenerator):
             "options": options
         }
 
-        # 写入元数据文件
+        # Write metadata file.
         meta_path = os.path.join(self.output_dir, f"{q_id}.json")
         with open(meta_path, "w") as f:
             json.dump(meta, f, indent=2)
@@ -862,15 +859,15 @@ class CombinationGenerator(BaseGenerator):
 
     def calculate_optimal_position(self, components, new_component_index, spacing=2.0):
         """
-        计算新组件的最佳位置，避免与现有组件重叠
+        component, avoidandcomponent
 
         Args:
-            components: 现有组件列表
-            new_component_index: 新组件的索引
-            spacing: 组件之间的基础间距
+            components:
+            new_component_index:
+            spacing:
 
         Returns:
-            (x, y, z): 建议的位置坐标
+            (x, y, z):
         """
         if new_component_index == 0:
             return (0, 0, 0)
@@ -901,12 +898,12 @@ class CombinationGenerator(BaseGenerator):
         else:
             avg_size = 2.0
 
-        # 为了进一步减小组件之间的互相遮挡和碰撞风险，使用更大的网格间距
+ # component,
         grid_spacing = max(spacing, avg_size * 2.0)
         max_search_distance = len(components) * grid_spacing * 0.5
         row = 0
         col = 0
-        spiral_direction = 0  # 0:右, 1:下, 2:左, 3:上
+        spiral_direction = 0 # 0:, 1:, 2:, 3:
         spiral_steps = 1
         steps_taken = 0
         direction_changes = 0
@@ -948,7 +945,7 @@ class CombinationGenerator(BaseGenerator):
                 row -= 1
 
             if abs(x) > max_search_distance or abs(z) > max_search_distance:
-                print(f"警告: 对组件 {new_component_index} 找不到无碰撞位置，使用默认网格位置")
+                print(f"Warning: {new_component_index} ,")
                 return (x, y, z)
 
 

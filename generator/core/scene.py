@@ -52,26 +52,26 @@ def setup_scene(config):
                 continue
 
     if render_engine not in available_engines:
-        print(f"警告: 渲染引擎 '{render_engine}' 不可用，将使用 'CYCLES'")
+        print(f"Warning: render engine '{render_engine}' unavailable, will use 'CYCLES'")
         render_engine = 'CYCLES'
 
     try:
         scene.render.engine = render_engine
-        print(f"使用渲染引擎: {render_engine}")
+        print(f"Using render engine: {render_engine}")
     except Exception as e:
-        print(f"设置渲染引擎失败: {e}，尝试使用CYCLES")
+        print(f"Failed to set render engine: {e}, trying CYCLES")
         try:
             scene.render.engine = 'CYCLES'
         except Exception as e2:
-            print(f"设置CYCLES引擎也失败: {e2}")
+            print(f"Failed to set CYCLES engine: {e2}")
 
     if scene.render.engine == 'CYCLES':
         gpu_enabled = config.get("use_gpu", True)
         if gpu_enabled:
-            print("正在配置GPU加速...")
+            print("Configuring GPU acceleration...")
             render_utils.setup_gpu_acceleration(config)
         else:
-            print("GPU加速已禁用")
+            print("GPU acceleration disabled")
 
     try:
         if 'EEVEE' in render_engine:
@@ -82,16 +82,16 @@ def setup_scene(config):
                 scene.eevee.bloom_intensity = 0.05
                 scene.eevee.use_ssr = True
             except AttributeError as e:
-                print(f"警告: 无法设置EEVEE参数: {e}")
+                print(f"Warning: Failed to set EEVEE parameters: {e}")
         elif render_engine == "CYCLES":
             try:
                 if not config.get("use_gpu", True) or bpy.context.scene.cycles.device != 'GPU':
                     scene.cycles.samples = 64
                 scene.cycles.use_denoising = True
             except AttributeError as e:
-                print(f"警告: 无法设置CYCLES参数: {e}")
+                print(f"Warning: Failed to set CYCLES parameters: {e}")
     except Exception as e:
-        print(f"设置渲染质量参数失败: {e}")
+        print(f"Failed to set render quality parameters: {e}")
 
     try:
         if not scene.world:
@@ -110,9 +110,9 @@ def setup_scene(config):
         links.new(background.outputs['Background'], output.inputs['Surface'])
         scene.world.node_tree.update_tag()
         bpy.context.view_layer.update()
-        print("✓ 成功设置纯白色背景 (强度1.0)")
+        print("✓ Successfully set pure white background (1.0)")
     except Exception as e:
-        print(f"✗ 设置背景时出错: {e}")
+        print(f"✗ Error setting background: {e}")
 
     try:
         render = scene.render
@@ -124,9 +124,9 @@ def setup_scene(config):
             scene.view_settings.look = 'None'
         if hasattr(scene.display_settings, 'display_device'):
             scene.display_settings.display_device = 'sRGB'
-        print("✓ 成功设置film属性为不透明，并配置颜色管理为Raw")
+        print("✓ Successfully set film to opaque and color management to Raw")
     except Exception as e:
-        print(f"✗ 设置film属性时出错: {e}")
+        print(f"✗ Error setting film properties: {e}")
 
     try:
         render = scene.render
@@ -146,9 +146,9 @@ def setup_scene(config):
             scene.cycles.transmission_bounces = 1
             scene.cycles.volume_bounces = 0
             scene.cycles.transparent_max_bounces = 2
-            print(f"✓ 设置Cycles采样数: {scene.cycles.samples}")
+            print(f"✓ Set Cycles samples: {scene.cycles.samples}")
     except Exception as e:
-            print(f"✗ 设置渲染引擎时出错: {e}")
+            print(f"✗ Error setting render engine: {e}")
 
     # Optional line-art (Freestyle) rendering for higher contrast
     if config.get("wireframe_render", False):
@@ -165,9 +165,9 @@ def setup_scene(config):
             fs.use_smoothness = True
             fs.use_culling = True
             fs.crease_angle = math.radians(134)
-            print("✓ 启用线稿渲染 (Freestyle)")
+            print("✓ Enabled line-art rendering (Freestyle)")
         except Exception as e:
-            print(f"✗ 启用线稿渲染失败: {e}")
+            print(f"✗ Failed to enable line-art rendering: {e}")
 
     try:
         cam_data = bpy.data.cameras.new("Camera")
@@ -180,14 +180,14 @@ def setup_scene(config):
             (math.radians(62), math.radians(2), math.radians(43)), 'XYZ')
         scene.camera = cam
     except Exception as e:
-        print(f"设置相机失败: {e}")
+        print(f"Failed to set camera: {e}")
         for obj in scene.objects:
             if obj.type == 'CAMERA':
                 scene.camera = obj
                 cam = obj
                 break
         else:
-            print("找不到可用相机，渲染可能会失败")
+            print("No available camera found; rendering may fail")
             return None
 
     try:
@@ -201,7 +201,7 @@ def setup_scene(config):
         light.rotation_euler = mathutils.Euler(
             (math.radians(45), 0, math.radians(90)), 'XYZ')
     except Exception as e:
-        print(f"设置太阳光失败: {e}")
+        print(f"Failed to set sun light: {e}")
 
     try:
         ambient_light = bpy.data.lights.new(name="Ambient", type='AREA')
@@ -215,25 +215,25 @@ def setup_scene(config):
         ambient_obj.rotation_euler = mathutils.Euler(
             (math.radians(60), 0, math.radians(45)), 'XYZ')
     except Exception as e:
-        print(f"设置环境光失败: {e}")
+        print(f"Failed to set ambient light: {e}")
 
     try:
         if hasattr(scene.render, 'use_simplify'):
             scene.render.use_simplify = True
             scene.render.simplify_subdivision = 1
     except Exception as e:
-        print(f"设置简化参数失败: {e}")
+        print(f": {e}")
 
     try:
         if hasattr(bpy.context.scene, 'display') and hasattr(bpy.context.scene.display, 'shading'):
             bpy.context.scene.display.shading.light = 'STUDIO'
             bpy.context.scene.display.shading.show_object_outline = True
     except Exception as e:
-        print(f"设置阴影样式失败: {e}")
+        print(f"Failed to set shading style: {e}")
 
     try:
         bpy.context.view_layer.update()
     except Exception as e:
-        print(f"更新视图层失败: {e}")
+        print(f"Failed to update view layer: {e}")
 
     return cam

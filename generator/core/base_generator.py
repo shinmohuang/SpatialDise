@@ -190,16 +190,16 @@ class BaseGenerator:
                 fixed_count += 1
 
         if fixed_count > 0:
-            info(f"已修复 {fixed_count} 个重叠问题")
+            info(f"Fixed {fixed_count} overlap issues")
         return fixed_count
 
     # Block classification helpers
     def classify_block_shape(self, block, tol: float = 0.05) -> str:
         """
-        粗略区分块类型：
-        - 返回 'cube' 表示近似正方体
-        - 返回 'rect_prism' 表示长方体（长宽高中至少有一维明显不同）
-        - 返回 'unknown' 表示无法判断
+        type:
+        - 'cube'
+        - 'rect_prism' ()
+        - 'unknown'
         """
         dims = getattr(block, "dimensions", None)
         if dims is None:
@@ -217,11 +217,11 @@ class BaseGenerator:
 
     def count_block_types(self, blocks, tol: float = 0.05) -> dict:
         """
-        统计块类型数量：
-        - total: 所有块总数
-        - cube: 近似正方体数量
-        - rect_prism: 长方体数量
-        - unknown: 无法判断的数量
+        type:
+        - total:
+        - cube:
+        - rect_prism:
+        - unknown:
         """
         counts = {"total": 0, "cube": 0, "rect_prism": 0, "unknown": 0}
         for block in blocks:
@@ -287,8 +287,8 @@ class BaseGenerator:
 
         import mathutils
 
-        # 连通阈值（用于判定是否“足够接近”）；碰撞判定独立计算，
-        # 严格意义上要求体积相交（不是仅仅面贴边）。
+ # (for"");,
+ # (face).
         connection_threshold = self.config.get("collision_threshold", 0.05)
         n = len(blocks)
         adjacency = [set() for _ in range(n)]
@@ -296,7 +296,7 @@ class BaseGenerator:
         for i in range(n):
             for j in range(i + 1, n):
                 try:
-                    # 计算两个方块在世界坐标系下的轴对齐包围盒
+                    # blocks
                     mat1 = blocks[i].matrix_world
                     mat2 = blocks[j].matrix_world
                     bbox1 = [mat1 @ mathutils.Vector(v) for v in blocks[i].bound_box]
@@ -314,23 +314,23 @@ class BaseGenerator:
                         (max(v.x for v in bbox2), max(v.y for v in bbox2), max(v.z for v in bbox2))
                     )
 
-                    # 1) 严格意义上的“重叠碰撞”：要求三个轴都存在严格交叠（不是仅仅边界相等）
+ # 1) "": in()
                     overlap_x = not (max1.x <= min2.x or min1.x >= max2.x)
                     overlap_y = not (max1.y <= min2.y or min1.y >= max2.y)
                     overlap_z = not (max1.z <= min2.z or min1.z >= max2.z)
                     is_colliding = overlap_x and overlap_y and overlap_z
                     if is_colliding:
-                        # 重叠视为不合格联通关系，由其他逻辑负责修正或保留
+ # , or
                         continue
 
-                    # 2) 连通性判定：允许面/边接触或有少量间距
+ # 2): face/or
                     min1_conn = min1 - mathutils.Vector(
                         (connection_threshold, connection_threshold, connection_threshold)
                     )
                     max1_conn = max1 + mathutils.Vector(
                         (connection_threshold, connection_threshold, connection_threshold)
                     )
-                    # 使用 < / >（而不是 <= / >=），确保刚好接触也被视为靠近
+ # < / >( <= / >=), ensure
                     separated = (
                         max1_conn.x < min2.x
                         or min1_conn.x > max2.x
@@ -405,7 +405,7 @@ class BaseGenerator:
             self.clear_scene()
             camera = self.setup_scene()
             if camera is None:
-                raise RuntimeError("无法初始化相机，渲染中止")
+                raise RuntimeError("Failed to initialize camera; rendering aborted")
 
             generated_files = []
             for i in range(self.config['num_questions']):
@@ -415,7 +415,7 @@ class BaseGenerator:
                     if meta_file:
                         generated_files.append(meta_file)
                 except Exception as exc:  # pragma: no cover - Blender runtime diagnostics
-                    print(f"生成问题 {q_id} 时出错: {exc}")
+                    print(f"Error generating question {q_id} error while processing: {exc}")
                     import traceback
                     traceback.print_exc()
                     continue
@@ -435,11 +435,11 @@ class BaseGenerator:
                 info(f"Summary file created: {summary_file}")
                 return generated_files, summary_file
 
-            print("警告: 没有成功生成任何问题")
+            print("Warning: No questions were generated successfully")
             return [], None
 
         except Exception as exc:  # pragma: no cover - Blender runtime diagnostics
-            print(f"数据集生成过程中发生错误: {exc}")
+            print(f"Error occurred during dataset generation: {exc}")
             import traceback
             traceback.print_exc()
             return [], None

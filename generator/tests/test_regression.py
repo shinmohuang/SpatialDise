@@ -49,7 +49,7 @@ def parse_args():
         raw_argv = raw_argv[1:]
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--task", action="append", choices=TASKS + ["rotation", "projection", "view_matching", "combination", "box_folding", "shape_finding"],
+    parser.add_argument("--task", action="append", choices=TASKS,
                         help="Tasks to run (default: 3d_rotation only)")
     parser.add_argument("--difficulty", action="append",
                         choices=DIFFICULTIES, help="Difficulties to run (default: easy)")
@@ -86,7 +86,7 @@ def _verify_metadata(meta_path: str, expected_res: tuple[int, int]):
         raise RuntimeError(f"No options found in metadata {meta_path}")
     if "seed" not in meta:
         raise RuntimeError(f"Seed not recorded in metadata {meta_path}")
-    if meta.get("question_type") in ("box_folding", "shape_finding"):
+    if meta.get("question_type") in ("3d_folding", "3d_shape_finding"):
         icons_used = meta.get("icons_used", [])
         if icons_used is not None and len(icons_used) == 0:
             log_msg = f"Warning: icons_used empty in {meta_path}"

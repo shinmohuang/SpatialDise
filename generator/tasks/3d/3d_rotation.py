@@ -25,10 +25,9 @@ class RotationMatchingGenerator(BaseGenerator):
             config (dict): Configuration dictionary. If None, default values are used.
         """
         super().__init__("3D_rotation", output_dir, config)
-        # 确保没有top_view属性
-        self._has_top_view = False  # 添加标记以确认没有俯视图
-
-        # 根据难度调整方块数量范围，以拉开题目复杂度
+        # top_view
+        self._has_top_view = False  # view
+ # difficultyblockcount,
         difficulty_label = self.config.get("difficulty", "easy")
         if difficulty_label == "easy":
             self.config["num_cells_min"] = 3
@@ -52,7 +51,7 @@ class RotationMatchingGenerator(BaseGenerator):
             seed=question_seed,
         )
 
-        # 确保原始组合体本身也是单连通的，避免出现悬浮块
+ # Ensure the original shape is a single connected component to avoid floating blocks
         try:
             self._ensure_single_component(original_obj)
         except Exception:
@@ -159,13 +158,13 @@ class RotationMatchingGenerator(BaseGenerator):
     ):
         """Generate and render distractor options, returning a list of option dicts.
 
-        约束：
-        - 干扰项形状不得与原始形状在 block 组成上完全一致（保证单解性）。
-        - 对同一题目，多个干扰项之间也避免重复的形状签名。
+        :
+        - block ().
+        -, distractoravoidshape.
         """
         options = []
 
-        # Original shape signature: 位置 + 尺寸，忽略整体平移/旋转以外的信息
+        # Original shape signature: + , /
         original_blocks = [child for child in original_obj.children]
         original_signature = self._block_signature(original_blocks)
         used_signatures = {original_signature}
@@ -202,9 +201,9 @@ class RotationMatchingGenerator(BaseGenerator):
                 distractor_cubes = [obj for obj in distractor_obj.children]
                 signature = self._block_signature(distractor_cubes)
 
-                # 保证：干扰项形状不与原始形状完全一致，并且不与之前的干扰项重复
+                # Ensure distractor shapes are unique versus the original and previous distractors.
                 if signature in used_signatures:
-                    best_candidate = distractor_obj  # 记录最后一次结果作为兜底
+                    best_candidate = distractor_obj  # Keep a fallback candidate from the last attempt.
                     continue
 
                 used_signatures.add(signature)
@@ -212,7 +211,7 @@ class RotationMatchingGenerator(BaseGenerator):
                 break
 
             if best_candidate is None:
-                # 理论上不应该发生，兜底跳过该干扰项
+                # Fallback: skip this distractor if no valid candidate was found.
                 continue
 
             distractor_obj = best_candidate
@@ -263,8 +262,8 @@ class RotationMatchingGenerator(BaseGenerator):
         """
         Build a hashable signature of a shape based on block positions + dimensions.
 
-        目的：
-        - 判断两个组合体在 block 组成上是否一致，用于 rotation 题单解性约束。
+        :
+        - block , rotation .
         """
         sig = []
         for b in blocks:
@@ -328,8 +327,7 @@ class RotationMatchingGenerator(BaseGenerator):
         # Prepare options list
         options = []
         used_views = set()  # Track used views to avoid duplicates
-        used_views.add(question_view["name"])  # 避免答案视角与问题视角相同
-
+        used_views.add(question_view["name"])  # question
         # Correct answer option
         correct_option, correct_view, correct_location, correct_rotation = (
             self._render_correct_option(

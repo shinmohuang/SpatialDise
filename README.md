@@ -3,6 +3,7 @@
 [![PDF (OpenReview)](https://img.shields.io/badge/PDF-OpenReview-B31B1B?logo=readthedocs&logoColor=white)](https://openreview.net/forum?id=bMINsPQpME)
 [![Dataset (Hugging Face)](https://img.shields.io/badge/Dataset-Hugging%20Face-FFB000?logo=huggingface&logoColor=black)](https://huggingface.co/collections/TACPS-liv/spatial-dise)
 [![Project Page](https://img.shields.io/badge/Project%20Page-SpatialDise-2D7FF9?logo=googlechrome&logoColor=white)](https://shinmohuang.github.io/spatialdise_page/)
+[![Evaluation (VLMEvalKit)](https://img.shields.io/badge/Evaluation-VLMEvalKit-4B8BBE?logo=github&logoColor=white)](https://github.com/open-compass/VLMEvalKit)
 [![Evaluation (lmms-eval)](https://img.shields.io/badge/Evaluation-lmms--eval-4B8BBE?logo=github&logoColor=white)](https://github.com/EvolvingLMMs-Lab/lmms-eval)
 
 SpatialDise is a Blender-based dataset generator for 3D spatial reasoning tasks.
@@ -17,13 +18,13 @@ It creates rendered images plus JSON metadata for:
 ## Evaluation Support
 
 Spatial-DISE is now supported in
-[EvolvingLMMs-Lab/lmms-eval](https://github.com/EvolvingLMMs-Lab/lmms-eval)
+[EvolvingLMMs-Lab/lmms-eval](https://github.com/EvolvingLMMs-Lab/lmms-eval) and [open-compass/VLMEvalKit](https://github.com/open-compass/VLMEvalKit)
 for standardized VLM evaluation.
 
-Integrations with
-[open-compass/VLMEvalKit](https://github.com/open-compass/VLMEvalKit) and
-[flageval-baai/FlagEvalMM](https://github.com/flageval-baai/FlagEvalMM) are
-currently WIP.
+ <!-- are also
+available. Integration with
+[flageval-baai/FlagEvalMM](https://github.com/flageval-baai/FlagEvalMM) is
+currently WIP. -->
 
 ## Requirements
 
